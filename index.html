@@ -16,6 +16,10 @@
             border: 1px solid black;
             padding: 5px;
         }
+        tr:hover {
+            background-color: #f5f5f5;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -77,11 +81,24 @@
                 // Pomijamy pierwszy wiersz (nagłówki) i zaczynamy od indeksu 1
                 for (let i = 1; i < rows.length; i++) {
                     const row = document.createElement('tr');
-                    rows[i].forEach(cell => {
+                    const rowData = rows[i];
+                    
+                    // Ostatnia kolumna to link - używamy go jako href dla całego wiersza
+                    const linkUrl = rowData[rowData.length - 1];
+                    if (linkUrl && linkUrl.trim()) {
+                        row.style.cursor = 'pointer';
+                        row.addEventListener('click', () => {
+                            window.open(linkUrl, '_blank');
+                        });
+                    }
+                    
+                    // Wyświetlamy wszystkie kolumny oprócz ostatniej (link)
+                    for (let j = 0; j < rowData.length - 1; j++) {
                         const td = document.createElement('td');
-                        td.textContent = cell;
+                        td.textContent = rowData[j];
                         row.appendChild(td);
-                    });
+                    }
+                    
                     tbody.appendChild(row);
                 }
             }
