@@ -98,17 +98,34 @@
 
         async function loadData() {
             try {
-                const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQM_hD_qj2loea8TYCQL_QEGnIs2G437HniXMT3UJ5IDc8Grr0qrtMnEzd1cZjOqQtfqPv7RSN1OkhU/pub?gid=0&single=true&output=csv';
+                console.log('Rozpoczynam ładowanie danych...');
+                const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQM_hD_qj2loea8TYCQL_QEGnIs2G437HniXMT3UJ5IDc8Grr0qrtMnEzd1cZjOqQtfqPv7RSN1OkhU/pubhtml?gid=0&single=true';
                 
                 const response = await fetch(csvUrl);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const csvText = await response.text();
+                console.log('CSV loaded, length:', csvText.length);
+                console.log('First 200 chars:', csvText.substring(0, 200));
+                
                 const rows = parseCSV(csvText);
+                console.log('Parsed rows:', rows.length);
+                
+                if (rows.length === 0) {
+                    throw new Error('Brak danych do wyświetlenia');
+                }
                 
                 displayTable(rows);
                 
             } catch (error) {
+                console.error('Błąd:', error);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = `Błąd ładowania danych: ${error.message}`;
             }
         }
         
