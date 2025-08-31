@@ -22,10 +22,8 @@
     <div id="loading">Ładowanie...</div>
     <div id="error" style="display: none; color: red;">Błąd ładowania danych</div>
     <table id="dataTable" style="display: none;">
-        <thead id="tableHead"></thead>
         <tbody id="tableBody"></tbody>
     </table>
-
     <script>
         async function loadData() {
             try {
@@ -42,7 +40,6 @@
                 document.getElementById('error').style.display = 'block';
             }
         }
-
         function parseCSV(csvText) {
             const lines = csvText.split('\n');
             const result = [];
@@ -72,23 +69,12 @@
             
             return result;
         }
-
         function displayTable(rows) {
             const table = document.getElementById('dataTable');
-            const thead = document.getElementById('tableHead');
             const tbody = document.getElementById('tableBody');
             
-            if (rows.length > 0) {
-                // Header
-                const headerRow = document.createElement('tr');
-                rows[0].forEach(header => {
-                    const th = document.createElement('th');
-                    th.textContent = header;
-                    headerRow.appendChild(th);
-                });
-                thead.appendChild(headerRow);
-                
-                // Body
+            if (rows.length > 1) {
+                // Pomijamy pierwszy wiersz (nagłówki) i zaczynamy od indeksu 1
                 for (let i = 1; i < rows.length; i++) {
                     const row = document.createElement('tr');
                     rows[i].forEach(cell => {
@@ -103,7 +89,6 @@
             document.getElementById('loading').style.display = 'none';
             table.style.display = 'table';
         }
-
         window.addEventListener('load', loadData);
     </script>
 </body>
