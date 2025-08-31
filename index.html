@@ -7,19 +7,45 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
         }
         table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 0 10px;
+            border-spacing: 0 15px;
         }
         th, td {
-            border: 1px solid black;
-            padding: 15px;
+            border: 3px solid #333;
+            padding: 20px;
+            font-weight: bold;
+            font-size: 16px;
+            background-color: white;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
         }
         tr:hover {
-            background-color: #f5f5f5;
+            background-color: #e3f2fd;
             cursor: pointer;
+        }
+        tr:hover td {
+            background-color: #e3f2fd;
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+        .magnet-text {
+            display: inline-block;
+            margin: 0 1px;
+        }
+        #loading {
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            margin: 20px;
+        }
+        #error {
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            margin: 20px;
         }
     </style>
 </head>
@@ -30,6 +56,14 @@
         <tbody id="tableBody"></tbody>
     </table>
     <script>
+        function applyMagnetEffect(text) {
+            return text.split('').map(char => {
+                if (char === ' ') return ' ';
+                const rotation = (Math.random() - 0.5) * 8; // Losowy obrót od -4 do +4 stopni
+                return `<span class="magnet-text" style="transform: rotate(${rotation}deg);">${char}</span>`;
+            }).join('');
+        }
+
         async function loadData() {
             try {
                 const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQM_hD_qj2loea8TYCQL_QEGnIs2G437HniXMT3UJ5IDc8Grr0qrtMnEzd1cZjOqQtfqPv7RSN1OkhU/pub?gid=0&single=true&output=csv';
@@ -45,6 +79,7 @@
                 document.getElementById('error').style.display = 'block';
             }
         }
+        
         function parseCSV(csvText) {
             const lines = csvText.split('\n');
             const result = [];
@@ -74,6 +109,7 @@
             
             return result;
         }
+        
         function displayTable(rows) {
             const table = document.getElementById('dataTable');
             const tbody = document.getElementById('tableBody');
@@ -96,7 +132,7 @@
                     // Wyświetlamy wszystkie kolumny oprócz ostatniej (link)
                     for (let j = 0; j < rowData.length - 1; j++) {
                         const td = document.createElement('td');
-                        td.textContent = rowData[j];
+                        td.innerHTML = applyMagnetEffect(rowData[j] || '');
                         row.appendChild(td);
                     }
                     
@@ -107,6 +143,7 @@
             document.getElementById('loading').style.display = 'none';
             table.style.display = 'table';
         }
+        
         window.addEventListener('load', loadData);
     </script>
 </body>
