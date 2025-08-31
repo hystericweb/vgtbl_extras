@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">Ładowanie...</div>
+    <div id="error" style="display: none; color: red;">Błąd ładowania danych</div>
+    <table id="dataTable" style="display: none;">
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+        async function loadData() {
+            try {
+                const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQM_hD_qj2loea8TYCQL_QEGnIs2G437HniXMT3UJ5IDc8Grr0qrtMnEzd1cZjOqQtfqPv7RSN1OkhU/pub?gid=0&single=true&output=csv';
+                
+                const response = await fetch(csvUrl);
+                const csvText = await response.text();
+                const rows = parseCSV(csvText);
+                
+                displayTable(rows);
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const result = [];
+            
+            for (let line of lines) {
+                if (line.trim()) {
+                    const row = [];
+                    let current = '';
+                    let inQuotes = false;
+                    
+                    for (let i = 0; i < line.length; i++) {
+                        const char = line[i];
+                        
+                        if (char === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (char === ',' && !inQuotes) {
+                            row.push(current.trim());
+                            current = '';
+                        } else {
+                            current += char;
+                        }
+                    }
+                    row.push(current.trim());
+                    result.push(row);
+                }
+            }
+            
+            return result;
+        }
+
+        function displayTable(rows) {
+            const table = document.getElementById('dataTable');
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+            
+            if (rows.length > 0) {
+                // Header
+                const headerRow = document.createElement('tr');
+                rows[0].forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                
+                // Body
+                for (let i = 1; i < rows.length; i++) {
+                    const row = document.createElement('tr');
+                    rows[i].forEach(cell => {
+                        const td = document.createElement('td');
+                        td.textContent = cell;
+                        row.appendChild(td);
+                    });
+                    tbody.appendChild(row);
+                }
+            }
+            
+            document.getElementById('loading').style.display = 'none';
+            table.style.display = 'table';
+        }
+
+        window.addEventListener('load', loadData);
+    </script>
+</body>
+</html>
