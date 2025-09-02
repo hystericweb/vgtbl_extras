@@ -8,9 +8,16 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 10px;
+            padding: 10px 50px;
             box-sizing: border-box;
-            overflow-x: auto;
+            overflow: visible;
+            height: auto;
+        }
+        
+        html, body {
+            height: auto;
+            overflow-x: visible;
+            overflow-y: visible;
         }
         
         * {
@@ -77,7 +84,7 @@
 
         @media screen and (max-width: 768px) {
             body {
-                padding: 5px;
+                padding: 5px 30px;
             }
             th, td {
                 font-size: 16px;
@@ -90,6 +97,9 @@
         }
 
         @media screen and (max-width: 600px) {
+            body {
+                padding: 5px 25px;
+            }
             th, td {
                 font-size: 15px;
                 padding: 18px;
@@ -102,7 +112,7 @@
 
         @media screen and (max-width: 480px) {
             body {
-                padding: 3px;
+                padding: 3px 20px;
             }
             th, td {
                 font-size: 14px;
@@ -115,6 +125,9 @@
         }
 
         @media screen and (max-width: 400px) {
+            body {
+                padding: 3px 15px;
+            }
             th, td {
                 font-size: 13px;
                 padding: 12px;
@@ -127,7 +140,7 @@
 
         @media screen and (max-width: 320px) {
             body {
-                padding: 2px;
+                padding: 2px 10px;
             }
             th, td {
                 font-size: 12px;
@@ -235,7 +248,30 @@
             table.style.display = 'table';
         }
         
-        window.addEventListener('load', loadData);
+        window.addEventListener('load', () => {
+            loadData();
+            
+            // Auto-resize iframe height
+            function resizeIframe() {
+                const height = document.body.scrollHeight;
+                if (window.parent && window.parent !== window) {
+                    try {
+                        window.parent.postMessage({
+                            type: 'resize',
+                            height: height
+                        }, '*');
+                    } catch (e) {
+                        console.log('Cannot resize iframe - cross-origin restriction');
+                    }
+                }
+            }
+            
+            // Resize after content loads
+            setTimeout(resizeIframe, 500);
+            
+            // Resize on window resize
+            window.addEventListener('resize', resizeIframe);
+        });
     </script>
 </body>
 </html>
