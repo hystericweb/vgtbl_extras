@@ -3,534 +3,262 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>Departures Board</title>
+<title>Tabela</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
-  
   :root{
-    --maxw: 1200px;
-    --radius: 4px;
+    --maxw: 1200px;                 /* szerokość treści */
+    --radius: 10px;
+    --border: 3px;
     --space-1: 6px;
-    --space-2: 12px;
+    --space-2: 10px;
     --space-3: 16px;
     --space-4: 24px;
     --space-5: 32px;
     --space-6: 48px;
-    
-    /* Airport terminal colors */
-    --bg-main: #1a1a1a;
-    --bg-board: #000;
-    --fg-primary: #00ff00;
-    --fg-secondary: #ffff00;
-    --fg-tertiary: #ffffff;
-    --fg-dim: #888;
-    --bg-row: #111;
-    --bg-hover: #222;
-    --border-color: #333;
-    --accent: #ff6b00;
+    --bg-hover: #e3f2fd;
+    --fg: #111;
+    --bd: #333;
   }
 
   *{ box-sizing: border-box; }
 
   html, body {
-    height: 100vh;
+    height: auto;
     overflow-x: hidden;
-    overflow-y: auto;
-    margin: 0;
-    padding: 0;
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    overflow-y: visible;
   }
 
   body{
-    font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-    color: var(--fg-primary);
-    padding: var(--space-3);
-    background-attachment: fixed;
-  }
-
-  .terminal-header {
-    text-align: center;
-    margin-bottom: var(--space-5);
-    padding: var(--space-4);
-    background: linear-gradient(90deg, transparent, rgba(0,255,0,0.1), transparent);
-    border-top: 2px solid var(--fg-primary);
-    border-bottom: 2px solid var(--fg-primary);
-  }
-
-  .terminal-title {
-    font-size: clamp(24px, 4vw, 36px);
-    font-weight: 700;
-    letter-spacing: 3px;
-    color: var(--fg-primary);
-    text-shadow: 0 0 10px var(--fg-primary);
+    font-family: Arial, sans-serif;
     margin: 0;
-  }
-
-  .terminal-subtitle {
-    font-size: clamp(12px, 2vw, 16px);
-    color: var(--fg-secondary);
-    margin: var(--space-1) 0 0 0;
-    letter-spacing: 1px;
+    color: var(--fg);
+    /* większe marginesy po bokach + responsywne: min 32px, rośnie do 96px */
+    padding-inline: clamp(32px, 6vw, 96px);
+    padding-block: 16px;
+    background: transparent;
   }
 
   .wrap{
     max-width: var(--maxw);
-    margin-inline: auto;
+    margin-inline: auto; /* wyrównanie i duże marginesy po bokach */
     width: 100%;
   }
 
-  .status-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg-board);
-    border: 1px solid var(--border-color);
-    padding: var(--space-2) var(--space-3);
-    margin-bottom: var(--space-3);
-    font-size: 14px;
-    color: var(--fg-dim);
-  }
-
-  .current-time {
-    color: var(--fg-secondary);
-    font-weight: 600;
-  }
-
-  /* Loading and error states */
+  /* Pasek informacyjny */
   #loading, #error {
-    font-weight: 600;
-    font-size: clamp(16px, 2vw, 20px);
+    font-weight: bold;
+    font-size: clamp(16px, 1.8vw, 18px);
     text-align: center;
     margin: var(--space-5) 0;
-    padding: var(--space-4);
-    border: 2px dashed var(--border-color);
-    background: var(--bg-row);
   }
-  
-  #loading {
-    color: var(--fg-secondary);
-    animation: pulse 1.5s infinite;
-  }
-  
-  #error{ 
-    color: #ff4444;
-    border-color: #ff4444;
-  }
+  #error{ color: #d32f2f; }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-  }
-
-  /* Table container with terminal styling */
+  /* Kontener przewijania dla tabeli na małych ekranach */
   .table-scroll{
     width: 100%;
-    overflow-x: auto;
-    background: var(--bg-board);
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius);
-    box-shadow: 
-      0 0 20px rgba(0,255,0,0.1),
-      inset 0 1px 0 rgba(255,255,255,0.1);
+    overflow-x: auto;     /* gdy kolumny się nie mieszczą, pojawi się scroll */
+    -webkit-overflow-scrolling: touch;
   }
 
   table{
     width: 100%;
-    border-collapse: collapse;
-    min-width: 100%;
-    background: var(--bg-board);
-  }
-
-  /* Table header */
-  .table-header {
-    background: linear-gradient(180deg, #333 0%, #222 100%);
-    border-bottom: 2px solid var(--fg-primary);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .header-cell {
-    padding: var(--space-3);
-    font-weight: 700;
-    font-size: clamp(12px, 1.5vw, 16px);
-    color: var(--fg-secondary);
-    text-align: left;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    border-right: 1px solid var(--border-color);
-  }
-
-  .header-cell:last-child {
-    border-right: none;
+    border-collapse: separate;
+    border-spacing: 0 var(--space-4);
+    min-width: 100%;       /* zostaje, ale mamy też poziomy scroll w razie W */
+    table-layout: fixed;   /* stabilne szerokości i ellipsy działają przewidywalnie */
   }
 
   th, td{
-    border-bottom: 1px solid var(--border-color);
-    padding: clamp(12px, 2vw, 20px) clamp(10px, 1.5vw, 16px);
-    font-weight: 400;
-    font-size: clamp(13px, 1.6vw, 16px);
-    background: var(--bg-row);
+    border: var(--border) solid var(--bd);
+    padding: clamp(14px, 2vw, 30px);
+    font-weight: bold;
+    font-size: clamp(14px, 1.8vw, 20px);
+    background: #fff;
+    min-height: 44px;
     vertical-align: middle;
-    text-align: left;
-    border-right: 1px solid var(--border-color);
-  }
-
-  td:last-child {
-    border-right: none;
+    white-space: nowrap;      /* domyślnie pojedyncza linia… */
+    overflow: hidden;
+    text-overflow: ellipsis;  /* … z elipsą, gdy za wąsko */
   }
 
   tr{
-    transition: all 0.3s ease;
-    position: relative;
+    transition: background-color .15s ease;
   }
-
   tr:hover td{
     background: var(--bg-hover);
     cursor: pointer;
-    color: var(--fg-tertiary);
   }
 
-  tr:hover::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: var(--accent);
-  }
-
-  /* Flickering effect for terminal authenticity */
-  .flicker {
-    animation: flicker 0.15s infinite linear alternate;
-  }
-
-  @keyframes flicker {
-    0% { opacity: 1; }
-    100% { opacity: 0.98; }
-  }
-
-  /* Focus states for accessibility */
-  tr[tabindex]:focus-visible {
-    outline: 2px solid var(--fg-primary);
-    outline-offset: -2px;
-  }
-
-  tr[tabindex]:focus-visible td {
+  /* Widoczny fokus dla nawigacji klawiaturą */
+  tr[tabindex]:focus-visible td{
+    outline: 3px solid #1976d2;
+    outline-offset: 2px;
     background: var(--bg-hover);
-    color: var(--fg-tertiary);
   }
 
-  /* Scanlines effect */
-  .table-scroll::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,255,0,0.03) 2px,
-      rgba(0,255,0,0.03) 4px
-    );
-    pointer-events: none;
-    z-index: 5;
-  }
-
-  /* Terminal character effects */
-  .magnet-text{
-    display: inline-block;
-    margin: 0;
-    will-change: transform;
-    transition: transform 0.1s ease;
-  }
-
-  /* Responsive adjustments */
+  /* Na mniejszych ekranach pozwól zawijać długie treści w komórkach,
+     a przewijanie poziome zostaje jako asekuracja */
   @media (max-width: 768px){
     th, td{
       white-space: normal;
       word-break: break-word;
-      padding: clamp(8px, 3vw, 12px);
     }
-    
-    .terminal-title {
-      font-size: clamp(20px, 6vw, 28px);
-    }
-    
-    .status-bar {
-      flex-direction: column;
-      gap: var(--space-1);
-    }
+    table{ border-spacing: 0 var(--space-3); }
   }
 
   @media (max-width: 480px){
-    th, td{ 
-      padding: clamp(6px, 2.5vw, 10px);
-      font-size: clamp(11px, 3vw, 14px);
-    }
+    table{ border-spacing: 0 var(--space-2); }
+    th, td{ padding: clamp(10px, 3.5vw, 16px); }
   }
 
-  /* Reduced motion */
+  /* Oszczędzanie ruchu – wyłącz rotację „magnesu” jeśli użytkownik woli mniej animacji */
   @media (prefers-reduced-motion: reduce){
-    .magnet-text, .flicker { 
-      transform: none !important; 
-      animation: none !important;
-    }
+    .magnet-text{ transform: none !important; }
   }
 
-  /* Glowing border effect */
-  .table-scroll {
-    animation: borderGlow 4s ease-in-out infinite alternate;
-  }
-
-  @keyframes borderGlow {
-    0% { box-shadow: 0 0 20px rgba(0,255,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1); }
-    100% { box-shadow: 0 0 30px rgba(0,255,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1); }
+  .magnet-text{
+    display: inline-block;
+    margin: 0 1px;
+    will-change: transform;
   }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="terminal-header">
-      <h1 class="terminal-title flicker">DEPARTURES</h1>
-      <div class="terminal-subtitle">TERMINAL INFORMATION SYSTEM</div>
-    </div>
-
-    <div class="status-bar">
-      <span>STATUS: <span style="color: var(--fg-primary);">OPERATIONAL</span></span>
-      <span class="current-time" id="currentTime">--:--:--</span>
-      <span>LAST UPDATE: <span id="lastUpdate">--:--</span></span>
-    </div>
-
-    <div id="loading">INITIALIZING SYSTEM...</div>
-    <div id="error" style="display:none;">SYSTEM ERROR - DATA UNAVAILABLE</div>
+    <div id="loading">Ładowanie…</div>
+    <div id="error" style="display:none;">Błąd ładowania danych</div>
 
     <div class="table-scroll">
       <table id="dataTable" style="display:none;">
-        <thead class="table-header">
-          <tr id="headerRow"></tr>
-        </thead>
         <tbody id="tableBody"></tbody>
       </table>
     </div>
   </div>
 
 <script>
-  // Update time display
-  function updateTime() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('pl-PL', { hour12: false });
-    const updateStr = now.toLocaleTimeString('pl-PL', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-    
-    document.getElementById('currentTime').textContent = timeStr;
-    document.getElementById('lastUpdate').textContent = updateStr;
-  }
-
-  // Terminal-style character effects
-  function applyTerminalEffect(text){
-    if (!text) return '';
-    return String(text).split('').map((char, index) => {
+  // Losowa, ale subtelna rotacja znaków
+  function applyMagnetEffect(text){
+    return String(text ?? '').split('').map(char=>{
       if(char === ' ') return ' ';
-      
-      // Subtle random effects for terminal authenticity
-      const shouldFlicker = Math.random() < 0.1;
-      const flickerClass = shouldFlicker ? 'flicker' : '';
-      
-      return `<span class="magnet-text ${flickerClass}">${char}</span>`;
+      // mniejszy zakres dla lepszej czytelności
+      const rotation = (Math.random() - 0.5) * 6; // -3° do +3°
+      return `<span class="magnet-text" style="transform: rotate(${rotation}deg);">${char}</span>`;
     }).join('');
   }
 
-  // Enhanced CSV parsing
+  // Solidniejsze parsowanie CSV (cudzysłowy + przecinki w polach)
   function parseCSV(csvText){
     const rows = [];
     let i = 0, field = '', inQuotes = false, row = [];
-    
     while(i < csvText.length){
       const c = csvText[i];
       if(c === '"'){
-        if(inQuotes && csvText[i+1] === '"'){ 
-          field += '"'; 
-          i++; 
-        } else { 
-          inQuotes = !inQuotes; 
-        }
+        if(inQuotes && csvText[i+1] === '"'){ field += '"'; i++; } // ucieczka ""
+        else { inQuotes = !inQuotes; }
       } else if(c === ',' && !inQuotes){
-        row.push(field.trim()); 
-        field = '';
+        row.push(field); field = '';
       } else if((c === '\n' || c === '\r') && !inQuotes){
-        if(field.length || row.length){ 
-          row.push(field.trim()); 
-          rows.push(row); 
-        }
-        field = ''; 
-        row = [];
+        if(field.length || row.length){ row.push(field); rows.push(row); }
+        field = ''; row = [];
+        // obsłuż CRLF
         if(c === '\r' && csvText[i+1] === '\n') i++;
       } else {
         field += c;
       }
       i++;
     }
-    if(field.length || row.length){ 
-      row.push(field.trim()); 
-      rows.push(row); 
-    }
-    return rows.filter(row => row.some(cell => cell.length > 0));
+    if(field.length || row.length){ row.push(field); rows.push(row); }
+    return rows;
   }
 
   async function loadData(){
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQM_hD_qj2loea8TYCQL_QEGnIs2G437HniXMT3UJ5IDc8Grr0qrtMnEzd1cZjOqQtfqPv7RSN1OkhU/pub?gid=0&single=true&output=csv';
     const loadingEl = document.getElementById('loading');
     const errorEl = document.getElementById('error');
-    
     try{
-      loadingEl.innerHTML = 'CONNECTING TO TERMINAL DATABASE<span class="flicker">...</span>';
-      
-      const res = await fetch(csvUrl, { 
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
-      });
-      
-      if(!res.ok) throw new Error(`NETWORK ERROR ${res.status}`);
-      
+      const res = await fetch(csvUrl, { cache: 'no-store' });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
       const csvText = await res.text();
       const rows = parseCSV(csvText);
-      
-      if(rows.length === 0) throw new Error('NO DATA RECEIVED');
-      
       displayTable(rows);
       loadingEl.style.display = 'none';
-      updateTime();
-      
-    } catch(e){
+    }catch(e){
       loadingEl.style.display = 'none';
       errorEl.style.display = 'block';
-      errorEl.innerHTML = `TERMINAL ERROR: ${e.message}`;
-      console.error('Terminal system error:', e);
+      console.error(e);
     }
   }
 
   function displayTable(rows){
     const table = document.getElementById('dataTable');
     const tbody = document.getElementById('tableBody');
-    const headerRow = document.getElementById('headerRow');
-    
     tbody.innerHTML = '';
-    headerRow.innerHTML = '';
 
-    if(rows.length > 0){
-      // Create headers (excluding the last column which is likely the URL)
-      const headers = rows[0];
-      for(let i = 0; i < headers.length - 1; i++){
-        const th = document.createElement('th');
-        th.className = 'header-cell';
-        th.innerHTML = applyTerminalEffect(headers[i] || `COL_${i+1}`);
-        headerRow.appendChild(th);
-      }
-
-      // Create data rows
+    if(rows.length > 1){
       for(let i = 1; i < rows.length; i++){
         const rowData = rows[i];
         if(!rowData || rowData.length === 0) continue;
 
         const tr = document.createElement('tr');
+        // dostępność: pozwól fokusować wiersz i otwierać klawiszem
         tr.setAttribute('tabindex', '0');
-        tr.setAttribute('role', 'button');
 
         const linkUrl = (rowData[rowData.length - 1] || '').trim();
 
-        // Add click/keyboard navigation
-        if(linkUrl && (linkUrl.startsWith('http') || linkUrl.startsWith('https'))){
-          tr.addEventListener('click', () => {
-            window.open(linkUrl, '_blank', 'noopener,noreferrer');
-          });
-          
-          tr.addEventListener('keydown', (ev) => {
+        if(linkUrl){
+          tr.addEventListener('click', ()=> window.open(linkUrl, '_blank', 'noopener'));
+          tr.addEventListener('keydown', (ev)=>{
             if(ev.key === 'Enter' || ev.key === ' '){
               ev.preventDefault();
-              window.open(linkUrl, '_blank', 'noopener,noreferrer');
+              window.open(linkUrl, '_blank', 'noopener');
             }
           });
-          
-          tr.style.cursor = 'pointer';
         }
 
-        // Create cells (excluding the URL column)
-        for(let j = 0; j < Math.min(rowData.length - 1, headers.length - 1); j++){
+        for(let j = 0; j < rowData.length - 1; j++){
           const td = document.createElement('td');
-          const cellContent = rowData[j] || '';
-          td.innerHTML = applyTerminalEffect(cellContent);
+          td.innerHTML = applyMagnetEffect(rowData[j] || '');
           tr.appendChild(td);
         }
-        
         tbody.appendChild(tr);
       }
     }
-    
     table.style.display = 'table';
+    // po wyrenderowaniu – dopasuj wysokość osadzenia
     postResize();
   }
 
+  // Lepsze dostosowanie wysokości do osadzającej ramki
   function postResize(){
     const height = document.documentElement.scrollHeight;
     if(window.parent && window.parent !== window){
       try{
-        window.parent.postMessage({ 
-          type: 'resize', 
-          height: Math.max(height, 600) 
-        }, '*');
-      } catch(e){
-        // Cross-origin, ignore silently
+        window.parent.postMessage({ type: 'resize', height }, '*');
+      }catch(e){
+        // cross-origin – po prostu zignoruj
       }
     }
   }
 
-  function debounce(fn, wait = 150){
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => fn.apply(null, args), wait);
-    };
+  // Debounce dla eventów resize
+  function debounce(fn, wait=150){
+    let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn.apply(null,args), wait); };
   }
 
-  // Initialize terminal system
-  window.addEventListener('load', () => {
-    // Start time updates
-    updateTime();
-    setInterval(updateTime, 1000);
-    
-    // Load data
+  window.addEventListener('load', ()=>{
     loadData();
 
-    // Responsive handling
+    // Reaguj na zmiany rozmiaru okna
     window.addEventListener('resize', debounce(postResize, 150));
 
+    // Obserwuj zmiany treści (np. po doładowaniu tabeli)
     if('ResizeObserver' in window){
-      const resizeObserver = new ResizeObserver(debounce(postResize, 50));
-      resizeObserver.observe(document.body);
-    } else {
+      const ro = new ResizeObserver(debounce(postResize, 50));
+      ro.observe(document.body);
+    }else{
+      // fallback – okresowe sprawdzenie
       setInterval(postResize, 500);
     }
-
-    // Periodic data refresh (every 5 minutes)
-    setInterval(loadData, 5 * 60 * 1000);
-  });
-
-  // Add some terminal startup effect
-  document.addEventListener('DOMContentLoaded', () => {
-    document.body.style.opacity = '0';
-    setTimeout(() => {
-      document.body.style.transition = 'opacity 1s ease';
-      document.body.style.opacity = '1';
-    }, 100);
   });
 </script>
 </body>
