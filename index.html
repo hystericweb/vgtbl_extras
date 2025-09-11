@@ -70,7 +70,7 @@
   table{
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 var(--space-4);
+    border-spacing: 0 var(--space-4); /* pionowy odstęp między wierszami */
     min-width: 100%;
     table-layout: fixed;
   }
@@ -86,6 +86,10 @@
     white-space: nowrap;
     overflow: visible;
   }
+
+  /* >>> MNIEJSZY ODSTĘP MIĘDZY DATĄ (1. kol.) A TEKSTEM (2. kol.) <<< */
+  td:first-child { padding-right: var(--space-2); }
+  td:nth-child(2) { padding-left: var(--space-2); }
 
   tr{
     transition: background-color .15s ease;
@@ -109,6 +113,8 @@
   @media (max-width: 480px){
     table{ border-spacing: 0 var(--space-2); }
     th, td{ padding: clamp(6px, 3vw, 16px); }
+    td:first-child { padding-right: var(--space-1); }
+    td:nth-child(2) { padding-left: var(--space-1); }
   }
 
   /* ====== Letter tiles (default ≥600px) ====== */
@@ -144,10 +150,10 @@
     /* Word pill */
     .magnet-word{
       display: inline-block;
-      margin: 2px 6px 2px 0;              /* odstęp między „klockami” */
+      margin: 2px 6px 2px 0;
       padding: 6px 10px;
       background: var(--letter-bg);
-      border-radius: 999px;               /* pigułka */
+      border-radius: 999px;
       font-weight: 700;
       transition: transform 0.18s ease, background 0.18s ease;
       box-shadow: 0 1px 2px rgba(0,0,0,.25);
@@ -155,8 +161,8 @@
     }
     .magnet-word:hover { background: var(--letter-hover-bg); transform: translateY(-1px); }
 
-    /* Hide letter styling if any sneaks in on mobile */
-    .magnet-text, .magnet-space { display: none !important; }
+    /* UWAGA: NIE UKRYWAMY już .magnet-text na siłę – przerysowujemy JS-em */
+    /* .magnet-text, .magnet-space { display: none !important; }  <-- usunięte */
   }
 
   /* Reduced motion */
@@ -177,6 +183,9 @@
     padding: 6px 10px;
     min-width: 42px;
     box-shadow: 0 1px 2px rgba(0,0,0,.25);
+    vertical-align: middle;
+    /* odrobinę ciaśniej obok tekstu */
+    margin-right: 6px;
   }
   .date-compact .day{
     font-size: clamp(18px, 2.6vw, 22px);
@@ -191,11 +200,11 @@
     margin-top: 2px;
   }
 
-  /* On very small screens, make the date a bit tighter */
   @media (max-width: 600px){
     .date-compact{
       padding: 6px 8px;
       min-width: 38px;
+      margin-right: 4px; /* jeszcze ciaśniej na mobile */
     }
   }
 </style>
@@ -234,7 +243,6 @@
 
   // Render word pills (mobile / narrow)
   function renderWords(text){
-    // Split on whitespace, collapse multiples; keep only words and render gaps via margins
     const words = String(text ?? '').trim().split(/\s+/);
     return words.map(w=>{
       const rot = randomRotation(1.0);
@@ -258,15 +266,12 @@
 
   /* ===== Date detection & formatting ===== */
 
-  // Try to parse common date formats and return { day: '07', mon: 'SEP', iso: '2025-09-07' } or null
   function parseDateLoose(s){
     if(!s) return null;
     const str = String(s).trim();
 
-    // Normalize separators
-    const isoLike = /^(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})$/;         // 2025-09-07, 2025/9/7, 2025.09.07
-    const euLike  = /^(\d{1,2})[-/\.](\d{1,2})[-/\.](\d{2,4})$/;        // 7-9-2025, 07.09.25
-    const usLike  = /^(\d{1,2})[-/\.](\d{1,2})[-/\.](\d{2,4})$/;        // 9/7/2025 (same shape as euLike; we assume EU by default)
+    const isoLike = /^(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})$/;
+    const euLike  = /^(\d{1,2})[-/\.](\d{1,2})[-/\.](\d{2,4})$/;
 
     let y, m, d;
 
@@ -277,7 +282,6 @@
       const [,dd, mm, yy] = str.match(euLike);
       d = +dd; m = +mm; y = (String(yy).length===2 ? (2000 + +yy) : +yy);
     } else {
-      // Try Date constructor as fallback (handles Month names)
       const tryD = new Date(str);
       if(!isNaN(tryD)){
         y = tryD.getFullYear(); m = tryD.getMonth()+1; d = tryD.getDate();
@@ -288,10 +292,9 @@
 
     if(m<1 || m>12 || d<1 || d>31 || y<1900 || y>3000) return null;
 
-    const monthStr = new Date(y, m-1, d).toLocaleString('en-US', { month: 'short' }).toUpperCase(); // 3-letter EN abbrev
+    const monthStr = new Date(y, m-1, d).toLocaleString('en-US', { month: 'short' }).toUpperCase();
     const dayStr = String(d).padStart(2,'0');
 
-    // Produce a normalized ISO for aria-label / title
     const iso = `${y}-${String(m).padStart(2,'0')}-${dayStr}`;
     return { day: dayStr, mon: monthStr, iso };
   }
@@ -300,7 +303,6 @@
     const p = parseDateLoose(dateStr);
     if(!p) return null;
     const {day, mon, iso} = p;
-    // aria-label for screen readers: keep original string but provide normalized too
     return `
       <span class="date-compact" aria-label="${escapeHTML(dateStr)} (${iso})" title="${escapeHTML(dateStr)}">
         <span class="day">${day}</span>
@@ -334,16 +336,20 @@
   }
 
   /* ===== Data loading & rendering ===== */
+  const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQM_hD_qj2loea8TYCQL_QEGnIs2G437HniXMT3UJ5IDc8Grr0qrtMnEzd1cZjOqQtfqPv7RSN1OkhU/pub?gid=0&single=true&output=csv';
+
+  let cachedRows = null;          // <<< cache wierszy
+  let lastRenderNarrow = null;    // <<< zapamiętany tryb (wąski/szeroki)
+
   async function loadData(){
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQM_hD_qj2loea8TYCQL_QEGnIs2G437HniXMT3UJ5IDc8Grr0qrtMnEzd1cZjOqQtfqPv7RSN1OkhU/pub?gid=0&single=true&output=csv';
     const loadingEl = document.getElementById('loading');
     const errorEl = document.getElementById('error');
     try{
-      const res = await fetch(csvUrl, { cache: 'no-store' });
+      const res = await fetch(CSV_URL, { cache: 'no-store' });
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const csvText = await res.text();
-      const rows = parseCSV(csvText);
-      displayTable(rows);
+      cachedRows = parseCSV(csvText);     // << zapisz do cache
+      displayTable(cachedRows);
       loadingEl.style.display = 'none';
     }catch(e){
       loadingEl.style.display = 'none';
@@ -357,7 +363,7 @@
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = '';
 
-    if(rows.length > 1){
+    if(rows && rows.length > 1){
       for(let i = 1; i < rows.length; i++){
         const rowData = rows[i];
         if(!rowData || rowData.length === 0) continue;
@@ -395,6 +401,7 @@
       }
     }
     table.style.display = 'table';
+    lastRenderNarrow = isNarrow();    // <<< zapamiętaj tryb po renderze
     postResize();
   }
 
@@ -414,15 +421,14 @@
   window.addEventListener('load', ()=>{
     loadData();
 
+    // <<< PRZERYSONYWANIE PRZY ZMIANIE TRYBU SZEROKI/WĄSKI
     window.addEventListener('resize', debounce(()=>{
-      // Re-render text blocks on mode switch between narrow/wide
-      // (Optional optimization: only if threshold crossed)
-      // For simplicity, we re-run display to refresh word/letter mode
-      const table = document.getElementById('dataTable');
-      const tbody = document.getElementById('tableBody');
-      // Rebuild by reading original text back is complex; instead, reload CSV.
-      // If you prefer not to refetch, store parsed rows globally.
-      // Here we store once:
+      const nowNarrow = isNarrow();
+      if(cachedRows && lastRenderNarrow !== null && nowNarrow !== lastRenderNarrow){
+        displayTable(cachedRows); // przerysuj w nowym trybie (litery ↔ słowa)
+      } else {
+        postResize();
+      }
     }, 150));
 
     if('ResizeObserver' in window){
@@ -432,9 +438,7 @@
       setInterval(postResize, 500);
     }
   });
-
-  // Optional: cache rows to avoid refetch on resize re-render
-  // (Keeping it simple — add if you want live switching without reload)
 </script>
 </body>
 </html>
+
