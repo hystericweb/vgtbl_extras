@@ -7,17 +7,19 @@
 <style>
   :root{
     --maxw: 1200px;                 /* szerokość treści */
-    --radius: 10px;
-    --border: 3px;
+    --radius: 4px;
+    --border: 1px;
     --space-1: 6px;
     --space-2: 10px;
     --space-3: 16px;
     --space-4: 24px;
     --space-5: 32px;
     --space-6: 48px;
-    --bg-hover: #e3f2fd;
-    --fg: #111;
-    --bd: #333;
+    --bg-hover: rgba(255, 255, 255, 0.1);
+    --fg: #fff;
+    --bd: #555;
+    --letter-bg: #2a2a2a;
+    --letter-hover-bg: #404040;
   }
 
   *{ box-sizing: border-box; }
@@ -29,7 +31,7 @@
   }
 
   body{
-    font-family: Arial, sans-serif;
+    font-family: 'Courier New', monospace;
     margin: 0;
     color: var(--fg);
     /* większe marginesy po bokach + responsywne: min 32px, rośnie do 96px */
@@ -50,8 +52,9 @@
     font-size: clamp(16px, 1.8vw, 18px);
     text-align: center;
     margin: var(--space-5) 0;
+    color: var(--fg);
   }
-  #error{ color: #d32f2f; }
+  #error{ color: #ff6b6b; }
 
   /* Kontener przewijania dla tabeli na małych ekranach */
   .table-scroll{
@@ -69,31 +72,28 @@
   }
 
   th, td{
-    border: var(--border) solid var(--bd);
+    border: none;
     padding: clamp(14px, 2vw, 30px);
-    font-weight: bold;
+    font-weight: normal;
     font-size: clamp(14px, 1.8vw, 20px);
-    background: #fff;
+    background: transparent;
     min-height: 44px;
     vertical-align: middle;
     white-space: nowrap;      /* domyślnie pojedyncza linia… */
-    overflow: hidden;
-    text-overflow: ellipsis;  /* … z elipsą, gdy za wąsko */
+    overflow: visible;
   }
 
   tr{
     transition: background-color .15s ease;
   }
-  tr:hover td{
-    background: var(--bg-hover);
+  tr:hover {
     cursor: pointer;
   }
 
   /* Widoczny fokus dla nawigacji klawiaturą */
-  tr[tabindex]:focus-visible td{
-    outline: 3px solid #1976d2;
+  tr[tabindex]:focus-visible {
+    outline: 2px solid #4a9eff;
     outline-offset: 2px;
-    background: var(--bg-hover);
   }
 
   /* Na mniejszych ekranach pozwól zawijać długie treści w komórkach,
@@ -111,15 +111,41 @@
     th, td{ padding: clamp(10px, 3.5vw, 16px); }
   }
 
-  /* Oszczędzanie ruchu – wyłącz rotację „magnesu” jeśli użytkownik woli mniej animacji */
+  /* Oszczędzanie ruchu – wyłącz rotację „magnesu" jeśli użytkownik woli mniej animacji */
   @media (prefers-reduced-motion: reduce){
     .magnet-text{ transform: none !important; }
   }
 
   .magnet-text{
     display: inline-block;
-    margin: 0 1px;
+    margin: 1px;
+    padding: 4px 6px;
+    background: var(--letter-bg);
+    color: var(--fg);
+    border-radius: var(--radius);
+    font-weight: bold;
+    min-width: 16px;
+    text-align: center;
+    transition: all 0.2s ease;
     will-change: transform;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .magnet-text:hover {
+    background: var(--letter-hover-bg);
+    transform: translateY(-1px);
+  }
+
+  /* Space character styling */
+  .magnet-space {
+    display: inline-block;
+    width: 12px;
+  }
+
+  /* Airport terminal styling for rows */
+  tr:hover .magnet-text {
+    background: var(--letter-hover-bg);
+    transform: translateY(-1px);
   }
 </style>
 </head>
@@ -139,9 +165,9 @@
   // Losowa, ale subtelna rotacja znaków
   function applyMagnetEffect(text){
     return String(text ?? '').split('').map(char=>{
-      if(char === ' ') return ' ';
+      if(char === ' ') return '<span class="magnet-space"></span>';
       // mniejszy zakres dla lepszej czytelności
-      const rotation = (Math.random() - 0.5) * 6; // -3° do +3°
+      const rotation = (Math.random() - 0.5) * 3; // -1.5° do +1.5°
       return `<span class="magnet-text" style="transform: rotate(${rotation}deg);">${char}</span>`;
     }).join('');
   }
