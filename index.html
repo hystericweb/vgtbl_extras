@@ -2,8 +2,8 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>Tabela</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tabela (mobile fix)</title>
 <style>
   :root{
     --maxw: 1200px;
@@ -25,11 +25,7 @@
 
   *{ box-sizing: border-box; }
 
-  html, body {
-    height: auto;
-    overflow-x: hidden;
-    overflow-y: visible;
-  }
+  html, body { height: auto; overflow-x: hidden; overflow-y: visible; }
 
   body{
     font-family: 'Roboto', monospace;
@@ -61,16 +57,12 @@
   }
   #error{ color: #ff6b6b; }
 
-  .table-scroll{
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  .table-scroll{ width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
   table{
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 var(--space-4); /* pionowy odstęp między wierszami */
+    border-spacing: 0 var(--space-4);
     min-width: 100%;
     table-layout: fixed;
   }
@@ -83,11 +75,11 @@
     background: transparent;
     min-height: 44px;
     vertical-align: middle;
-    white-space: nowrap;
+    white-space: nowrap; /* desktop keeps single line */
     overflow: visible;
   }
 
-  /* >>> MNIEJSZY ODSTĘP MIĘDZY DATĄ (1. kol.) A TEKSTEM (2. kol.) <<< */
+  /* ciaśniej: data (1. kol.) ↔ tekst (2. kol.) */
   td:first-child { padding-right: var(--space-2); }
   td:nth-child(2) { padding-left: var(--space-2); }
 
@@ -97,19 +89,11 @@
     border-radius: 8px;
     margin-bottom: 8px;
   }
-  tr:hover {
-    cursor: pointer;
-    background: rgba(255, 255, 255, 0.1);
-  }
+  tr:hover { cursor: pointer; background: rgba(255, 255, 255, 0.1); }
+  tr[tabindex]:focus-visible { outline: 2px solid #4a9eff; outline-offset: 2px; }
 
-  tr[tabindex]:focus-visible {
-    outline: 2px solid #4a9eff;
-    outline-offset: 2px;
-  }
+  @media (max-width: 768px){ table{ border-spacing: 0 var(--space-3); } }
 
-  @media (max-width: 768px){
-    table{ border-spacing: 0 var(--space-3); }
-  }
   @media (max-width: 480px){
     table{ border-spacing: 0 var(--space-2); }
     th, td{ padding: clamp(6px, 3vw, 16px); }
@@ -117,7 +101,7 @@
     td:nth-child(2) { padding-left: var(--space-1); }
   }
 
-  /* ====== Letter tiles (default ≥600px) ====== */
+  /* ====== Letter tiles (≥600px) ====== */
   .magnet-text{
     display: inline-block;
     margin: 1px;
@@ -131,6 +115,7 @@
     transition: transform 0.2s ease, background 0.2s ease;
     will-change: transform;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transform-origin: center;
   }
   .magnet-text:hover { background: var(--letter-hover-bg); transform: translateY(-1px); }
   .magnet-space { display: inline-block; width: 12px; }
@@ -139,30 +124,37 @@
   @media (max-width: 600px){
     table { table-layout: auto; }
 
+    /* cells must wrap naturally and NEVER stack letters vertically */
     th, td{
-      white-space: normal;
+      white-space: normal;      /* allow lines to wrap on words */
+      word-break: normal;       /* keep words intact */
+      overflow-wrap: normal;    /* avoid breaking inside words */
+      -webkit-hyphens: none;
+      hyphens: manual;
       line-height: 1.35;
       font-size: clamp(16px, 4.2vw, 18px);
-      word-break: break-word;
-      overflow-wrap: anywhere;
+      vertical-align: top;
     }
 
     /* Word pill */
     .magnet-word{
-      display: inline-block;
+      display: inline-flex;     /* stable baseline */
+      align-items: center;
       margin: 2px 6px 2px 0;
       padding: 6px 10px;
       background: var(--letter-bg);
       border-radius: 999px;
       font-weight: 700;
-      transition: transform 0.18s ease, background 0.18s ease;
+      line-height: 1.1;
+      white-space: nowrap;      /* keep each word on a single line */
       box-shadow: 0 1px 2px rgba(0,0,0,.25);
-      vertical-align: baseline;
+      will-change: transform;
+      transform: none !important;  /* remove jitter on mobile for coherence */
     }
-    .magnet-word:hover { background: var(--letter-hover-bg); transform: translateY(-1px); }
+    .magnet-word:hover { background: var(--letter-hover-bg); }
 
-    /* UWAGA: NIE UKRYWAMY już .magnet-text na siłę – przerysowujemy JS-em */
-    /* .magnet-text, .magnet-space { display: none !important; }  <-- usunięte */
+    /* hide per-letter style in narrow view to prevent vertical stacking */
+    .magnet-text, .magnet-space { display: none !important; }
   }
 
   /* Reduced motion */
@@ -184,28 +176,13 @@
     min-width: 42px;
     box-shadow: 0 1px 2px rgba(0,0,0,.25);
     vertical-align: middle;
-    /* odrobinę ciaśniej obok tekstu */
     margin-right: 6px;
   }
-  .date-compact .day{
-    font-size: clamp(18px, 2.6vw, 22px);
-    font-weight: 800;
-    letter-spacing: 0.5px;
-  }
-  .date-compact .month{
-    font-size: clamp(10px, 1.6vw, 12px);
-    font-weight: 700;
-    opacity: 0.9;
-    letter-spacing: 0.6px;
-    margin-top: 2px;
-  }
+  .date-compact .day{ font-size: clamp(18px, 2.6vw, 22px); font-weight: 800; letter-spacing: 0.5px; }
+  .date-compact .month{ font-size: clamp(10px, 1.6vw, 12px); font-weight: 700; opacity: 0.9; letter-spacing: 0.6px; margin-top: 2px; }
 
   @media (max-width: 600px){
-    .date-compact{
-      padding: 6px 8px;
-      min-width: 38px;
-      margin-right: 4px; /* jeszcze ciaśniej na mobile */
-    }
+    .date-compact{ padding: 6px 8px; min-width: 38px; margin-right: 4px; }
   }
 </style>
 </head>
@@ -223,20 +200,14 @@
 
 <script>
   /* ===== Helpers ===== */
-
-  // Random but subtle rotation (letters on desktop, words on mobile)
-  function randomRotation(maxDeg){
-    const range = maxDeg * 2;
-    return (Math.random() * range) - maxDeg; // -max..+max
-  }
-
+  function randomRotation(maxDeg){ const range = maxDeg * 2; return (Math.random() * range) - maxDeg; }
   function isNarrow(){ return (typeof window !== 'undefined') && window.innerWidth <= 600; }
 
   // Render per-letter tiles (desktop / wide)
   function renderLetters(text){
     return String(text ?? '').split('').map(char=>{
       if(char === ' ') return '<span class="magnet-space"></span>';
-      const rotation = randomRotation(1.5);
+      const rotation = randomRotation(1.2);
       return `<span class="magnet-text" style="transform: rotate(${rotation}deg);">${escapeHTML(char)}</span>`;
     }).join('');
   }
@@ -245,16 +216,12 @@
   function renderWords(text){
     const words = String(text ?? '').trim().split(/\s+/);
     return words.map(w=>{
-      const rot = randomRotation(1.0);
-      return `<span class="magnet-word" style="transform: rotate(${rot}deg);">${escapeHTML(w)}</span>`;
-    }).join('');
+      return `<span class="magnet-word">${escapeHTML(w)}</span>`; // no rotation on mobile for clarity
+    }).join(' ');
   }
 
-  function applyBlockyText(text){
-    return isNarrow() ? renderWords(text) : renderLetters(text);
-  }
+  function applyBlockyText(text){ return isNarrow() ? renderWords(text) : renderLetters(text); }
 
-  // Escape for HTML injection safety
   function escapeHTML(s){
     return String(s)
       .replace(/&/g,'&amp;')
@@ -265,36 +232,28 @@
   }
 
   /* ===== Date detection & formatting ===== */
-
   function parseDateLoose(s){
     if(!s) return null;
     const str = String(s).trim();
 
-    const isoLike = /^(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})$/;
-    const euLike  = /^(\d{1,2})[-/\.](\d{1,2})[-/\.](\d{2,4})$/;
+    const isoLike = /^(\d{4})[-\/\.](\d{1,2})[-\/\.](\d{1,2})$/;
+    const euLike  = /^(\d{1,2})[-\/\.](\d{1,2})[-\/\.]?(\d{2,4})$/;
 
     let y, m, d;
-
     if(isoLike.test(str)){
-      const [,yy, mm, dd] = str.match(isoLike);
-      y = +yy; m = +mm; d = +dd;
+      const [,yy, mm, dd] = str.match(isoLike); y = +yy; m = +mm; d = +dd;
     } else if(euLike.test(str)){
-      const [,dd, mm, yy] = str.match(euLike);
-      d = +dd; m = +mm; y = (String(yy).length===2 ? (2000 + +yy) : +yy);
+      const [,dd, mm, yy] = str.match(euLike); d = +dd; m = +mm; y = (String(yy).length===2 ? (2000 + +yy) : +yy);
     } else {
       const tryD = new Date(str);
-      if(!isNaN(tryD)){
-        y = tryD.getFullYear(); m = tryD.getMonth()+1; d = tryD.getDate();
-      } else {
-        return null;
-      }
+      if(!isNaN(tryD)){ y = tryD.getFullYear(); m = tryD.getMonth()+1; d = tryD.getDate(); }
+      else { return null; }
     }
 
     if(m<1 || m>12 || d<1 || d>31 || y<1900 || y>3000) return null;
 
     const monthStr = new Date(y, m-1, d).toLocaleString('en-US', { month: 'short' }).toUpperCase();
     const dayStr = String(d).padStart(2,'0');
-
     const iso = `${y}-${String(m).padStart(2,'0')}-${dayStr}`;
     return { day: dayStr, mon: monthStr, iso };
   }
@@ -326,9 +285,7 @@
         if(field.length || row.length){ row.push(field); rows.push(row); }
         field = ''; row = [];
         if(c === '\r' && csvText[i+1] === '\n') i++;
-      } else {
-        field += c;
-      }
+      } else { field += c; }
       i++;
     }
     if(field.length || row.length){ row.push(field); rows.push(row); }
@@ -338,8 +295,8 @@
   /* ===== Data loading & rendering ===== */
   const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQM_hD_qj2loea8TYCQL_QEGnIs2G437HniXMT3UJ5IDc8Grr0qrtMnEzd1cZjOqQtfqPv7RSN1OkhU/pub?gid=0&single=true&output=csv';
 
-  let cachedRows = null;          // <<< cache wierszy
-  let lastRenderNarrow = null;    // <<< zapamiętany tryb (wąski/szeroki)
+  let cachedRows = null;
+  let lastRenderNarrow = null;
 
   async function loadData(){
     const loadingEl = document.getElementById('loading');
@@ -348,7 +305,7 @@
       const res = await fetch(CSV_URL, { cache: 'no-store' });
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const csvText = await res.text();
-      cachedRows = parseCSV(csvText);     // << zapisz do cache
+      cachedRows = parseCSV(csvText);
       displayTable(cachedRows);
       loadingEl.style.display = 'none';
     }catch(e){
@@ -375,10 +332,7 @@
         if(linkUrl){
           tr.addEventListener('click', ()=> window.open(linkUrl, '_blank', 'noopener'));
           tr.addEventListener('keydown', (ev)=>{
-            if(ev.key === 'Enter' || ev.key === ' '){
-              ev.preventDefault();
-              window.open(linkUrl, '_blank', 'noopener');
-            }
+            if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); window.open(linkUrl, '_blank', 'noopener'); }
           });
         }
 
@@ -388,12 +342,8 @@
 
           // 1) Try date compact renderer
           const dateHTML = renderDateCompact(cell);
-          if(dateHTML){
-            td.innerHTML = dateHTML;
-          } else {
-            // 2) Otherwise render as blocky text (letters on wide, words on narrow)
-            td.innerHTML = applyBlockyText(cell);
-          }
+          if(dateHTML){ td.innerHTML = dateHTML; }
+          else { td.innerHTML = applyBlockyText(cell); }
 
           tr.appendChild(td);
         }
@@ -401,7 +351,7 @@
       }
     }
     table.style.display = 'table';
-    lastRenderNarrow = isNarrow();    // <<< zapamiętaj tryb po renderze
+    lastRenderNarrow = isNarrow();
     postResize();
   }
 
@@ -409,23 +359,19 @@
   function postResize(){
     const height = document.documentElement.scrollHeight;
     if(window.parent && window.parent !== window){
-      try{
-        window.parent.postMessage({ type: 'resize', height }, '*');
-      }catch(e){ /* ignore cross-origin */ }
+      try{ window.parent.postMessage({ type: 'resize', height }, '*'); }catch(e){ /* ignore cross-origin */ }
     }
   }
-  function debounce(fn, wait=150){
-    let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn.apply(null,args), wait); };
-  }
+  function debounce(fn, wait=150){ let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn.apply(null,args), wait); }; }
 
   window.addEventListener('load', ()=>{
     loadData();
 
-    // <<< PRZERYSONYWANIE PRZY ZMIANIE TRYBU SZEROKI/WĄSKI
+    // Re-render when crossing the 600px threshold (letters ↔ words)
     window.addEventListener('resize', debounce(()=>{
       const nowNarrow = isNarrow();
       if(cachedRows && lastRenderNarrow !== null && nowNarrow !== lastRenderNarrow){
-        displayTable(cachedRows); // przerysuj w nowym trybie (litery ↔ słowa)
+        displayTable(cachedRows);
       } else {
         postResize();
       }
@@ -434,11 +380,8 @@
     if('ResizeObserver' in window){
       const ro = new ResizeObserver(debounce(postResize, 50));
       ro.observe(document.body);
-    }else{
-      setInterval(postResize, 500);
-    }
+    } else { setInterval(postResize, 500); }
   });
 </script>
 </body>
 </html>
-
