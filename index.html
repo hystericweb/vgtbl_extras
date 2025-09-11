@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tabela (mobile fix)</title>
+<title>Tabela (mobile fix + balanced spacing)</title>
 <style>
   :root{
     --maxw: 1200px;
@@ -11,10 +11,10 @@
     --border: 1px;
     --space-1: 6px;
     --space-2: 10px;
-    --space-3: 16px;
-    --space-4: 24px;
-    --space-5: 32px;
-    --space-6: 48px;
+    --space-3: 14px;
+    --space-4: 20px;
+    --space-5: 28px;
+    --space-6: 40px;
     --bg-hover: rgba(255, 255, 255, 0.1);
     --fg: #fff;
     --bd: #555;
@@ -31,7 +31,7 @@
     font-family: 'Roboto', monospace;
     margin: 0;
     color: var(--fg);
-    padding-inline: clamp(32px, 6vw, 96px);
+    padding-inline: clamp(24px, 5vw, 72px);
     padding-block: 16px;
     background: transparent;
   }
@@ -42,7 +42,7 @@
     width: 100%;
     background: #1a1a1a;
     border-radius: 16px;
-    padding: var(--space-5);
+    padding: var(--space-4);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
 
@@ -51,7 +51,7 @@
     font-weight: 500;
     font-size: clamp(12px, 2.5vw, 18px);
     text-align: center;
-    margin: var(--space-5) 0;
+    margin: var(--space-4) 0;
     color: var(--fg);
     font-family: 'Roboto', Arial, sans-serif;
   }
@@ -62,14 +62,14 @@
   table{
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 var(--space-4);
+    border-spacing: 0 var(--space-3);
     min-width: 100%;
     table-layout: fixed;
   }
 
   th, td{
     border: none;
-    padding: clamp(14px, 2vw, 30px);
+    padding: clamp(12px, 2vw, 22px);
     font-weight: normal;
     font-size: clamp(14px, 1.8vw, 20px);
     background: transparent;
@@ -79,26 +79,34 @@
     overflow: visible;
   }
 
-  /* ciaśniej: data (1. kol.) ↔ tekst (2. kol.) */
+  /* ===== Balanced horizontal spacing between columns ===== */
+  /* Equalized edge paddings to keep date↔text, text↔next columns visually even */
   td:first-child { padding-right: var(--space-2); }
-  td:nth-child(2) { padding-left: var(--space-2); }
+  td + td { padding-left: var(--space-2); }
 
   tr{
     transition: background-color .15s ease;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   tr:hover { cursor: pointer; background: rgba(255, 255, 255, 0.1); }
   tr[tabindex]:focus-visible { outline: 2px solid #4a9eff; outline-offset: 2px; }
 
-  @media (max-width: 768px){ table{ border-spacing: 0 var(--space-3); } }
-
-  @media (max-width: 480px){
-    table{ border-spacing: 0 var(--space-2); }
-    th, td{ padding: clamp(6px, 3vw, 16px); }
+  @media (max-width: 600px){
+    table { table-layout: auto; border-spacing: 0 var(--space-2); }
+    th, td{
+      padding: clamp(8px, 3vw, 16px);
+      white-space: normal;      /* allow wrap on words */
+      word-break: normal;       /* keep words intact */
+      overflow-wrap: normal;    /* avoid breaking inside words */
+      -webkit-hyphens: none;
+      hyphens: manual;
+      vertical-align: top;
+      line-height: 1.35;
+    }
     td:first-child { padding-right: var(--space-1); }
-    td:nth-child(2) { padding-left: var(--space-1); }
+    td + td { padding-left: var(--space-1); }
   }
 
   /* ====== Letter tiles (≥600px) ====== */
@@ -118,24 +126,10 @@
     transform-origin: center;
   }
   .magnet-text:hover { background: var(--letter-hover-bg); transform: translateY(-1px); }
-  .magnet-space { display: inline-block; width: 12px; }
+  .magnet-space { display: inline-block; width: 10px; }
 
   /* ====== Word blocks (≤600px) ====== */
   @media (max-width: 600px){
-    table { table-layout: auto; }
-
-    /* cells must wrap naturally and NEVER stack letters vertically */
-    th, td{
-      white-space: normal;      /* allow lines to wrap on words */
-      word-break: normal;       /* keep words intact */
-      overflow-wrap: normal;    /* avoid breaking inside words */
-      -webkit-hyphens: none;
-      hyphens: manual;
-      line-height: 1.35;
-      font-size: clamp(16px, 4.2vw, 18px);
-      vertical-align: top;
-    }
-
     /* Word pill */
     .magnet-word{
       display: inline-flex;     /* stable baseline */
@@ -151,9 +145,8 @@
       will-change: transform;
       transform: none !important;  /* remove jitter on mobile for coherence */
     }
-    .magnet-word:hover { background: var(--letter-hover-bg); }
 
-    /* hide per-letter style in narrow view to prevent vertical stacking */
+    /* Hide per-letter tiles in narrow view to prevent vertical stack */
     .magnet-text, .magnet-space { display: none !important; }
   }
 
@@ -171,19 +164,17 @@
     line-height: 1;
     background: #111a;
     border: 1px solid #2a2a2a;
-    border-radius: 10px;
-    padding: 6px 10px;
-    min-width: 42px;
+    border-radius: 8px;
+    padding: 4px 8px;
+    min-width: 36px;
     box-shadow: 0 1px 2px rgba(0,0,0,.25);
     vertical-align: middle;
-    margin-right: 6px;
+    margin-right: 8px; /* tighter gap to city */
   }
-  .date-compact .day{ font-size: clamp(18px, 2.6vw, 22px); font-weight: 800; letter-spacing: 0.5px; }
-  .date-compact .month{ font-size: clamp(10px, 1.6vw, 12px); font-weight: 700; opacity: 0.9; letter-spacing: 0.6px; margin-top: 2px; }
+  .date-compact .day{ font-size: clamp(16px, 2.6vw, 20px); font-weight: 800; letter-spacing: 0.3px; }
+  .date-compact .month{ font-size: clamp(10px, 1.6vw, 12px); font-weight: 700; opacity: 0.9; letter-spacing: 0.4px; margin-top: 2px; }
 
-  @media (max-width: 600px){
-    .date-compact{ padding: 6px 8px; min-width: 38px; margin-right: 4px; }
-  }
+  @media (max-width: 600px){ .date-compact{ margin-right: 6px; } }
 </style>
 </head>
 <body>
@@ -208,26 +199,25 @@
     return String(text ?? '').split('').map(char=>{
       if(char === ' ') return '<span class="magnet-space"></span>';
       const rotation = randomRotation(1.2);
-      return `<span class="magnet-text" style="transform: rotate(${rotation}deg);">${escapeHTML(char)}</span>`;
+      return `<span class=\"magnet-text\" style=\"transform: rotate(${rotation}deg);\">${escapeHTML(char)}</span>`;
     }).join('');
   }
 
   // Render word pills (mobile / narrow)
   function renderWords(text){
     const words = String(text ?? '').trim().split(/\s+/);
-    return words.map(w=>{
-      return `<span class="magnet-word">${escapeHTML(w)}</span>`; // no rotation on mobile for clarity
-    }).join(' ');
+    return words.map(w=> `<span class=\"magnet-word\">${escapeHTML(w)}</span>`).join(' ');
   }
 
   function applyBlockyText(text){ return isNarrow() ? renderWords(text) : renderLetters(text); }
 
+  // Escape for HTML injection safety
   function escapeHTML(s){
     return String(s)
       .replace(/&/g,'&amp;')
       .replace(/</g,'&lt;')
       .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
+      .replace(/\"/g,'&quot;')
       .replace(/'/g,'&#039;');
   }
 
@@ -237,7 +227,7 @@
     const str = String(s).trim();
 
     const isoLike = /^(\d{4})[-\/\.](\d{1,2})[-\/\.](\d{1,2})$/;
-    const euLike  = /^(\d{1,2})[-\/\.](\d{1,2})[-\/\.]?(\d{2,4})$/;
+    const euLike  = /^(\d{1,2})[-\/\.](\d{1,2})[-\/.](\d{2,4})$/;
 
     let y, m, d;
     if(isoLike.test(str)){
@@ -263,10 +253,7 @@
     if(!p) return null;
     const {day, mon, iso} = p;
     return `
-      <span class="date-compact" aria-label="${escapeHTML(dateStr)} (${iso})" title="${escapeHTML(dateStr)}">
-        <span class="day">${day}</span>
-        <span class="month">${mon}</span>
-      </span>
+      <span class=\"date-compact\" aria-label=\"${escapeHTML(dateStr)} (${iso})\" title=\"${escapeHTML(dateStr)}\">\n        <span class=\"day\">${day}</span>\n        <span class=\"month\">${mon}</span>\n      </span>
     `;
   }
 
@@ -355,7 +342,7 @@
     postResize();
   }
 
-  /* Resize messaging for embedded scenarios */
+  /* Resize messaging for embedded scenarios + re-render on threshold switch */
   function postResize(){
     const height = document.documentElement.scrollHeight;
     if(window.parent && window.parent !== window){
