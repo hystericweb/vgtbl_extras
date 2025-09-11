@@ -31,7 +31,7 @@
   }
 
   body{
-    font-family: 'Roboto', monospace;
+    font-family: 'Courier New', monospace;
     margin: 0;
     color: var(--fg);
     /* większe marginesy po bokach + responsywne: min 32px, rośnie do 96px */
@@ -104,19 +104,14 @@
     outline-offset: 2px;
   }
 
-  /* Na mniejszych ekranach pozwól zawijać długie treści w komórkach,
-     a przewijanie poziome zostaje jako asekuracja */
+  /* Responsive adjustments - maintain word integrity */
   @media (max-width: 768px){
-    th, td{
-      white-space: normal;
-      word-break: break-word;
-    }
     table{ border-spacing: 0 var(--space-3); }
   }
 
   @media (max-width: 480px){
     table{ border-spacing: 0 var(--space-2); }
-    th, td{ padding: clamp(10px, 3.5vw, 16px); }
+    th, td{ padding: clamp(6px, 3vw, 16px); }
   }
 
   /* Oszczędzanie ruchu – wyłącz rotację „magnesu" jeśli użytkownik woli mniej animacji */
