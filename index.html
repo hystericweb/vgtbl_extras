@@ -34,8 +34,8 @@
     font-family: 'Courier New', monospace;
     margin: 0;
     color: var(--fg);
-    /* większe marginesy po bokach + responsywne: min 32px, rośnie do 96px */
-    padding-inline: clamp(32px, 6vw, 96px);
+    /* większe marginesy po bokach + responsywne: min 16px, rośnie do 48px */
+    padding-inline: clamp(16px, 4vw, 48px);
     padding-block: 16px;
     background: transparent;
   }
@@ -46,16 +46,16 @@
     width: 100%;
     background: #1a1a1a;
     border-radius: 16px;
-    padding: var(--space-5);
+    padding: var(--space-4);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
 
   /* Pasek informacyjny */
   #loading, #error {
     font-weight: 500;
-    font-size: clamp(12px, 2.5vw, 18px);
+    font-size: clamp(16px, 3vw, 20px);
     text-align: center;
-    margin: var(--space-5) 0;
+    margin: var(--space-4) 0;
     color: var(--fg);
     font-family: 'Roboto', Arial, sans-serif;
   }
@@ -71,21 +71,23 @@
   table{
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 var(--space-4);
+    border-spacing: 0 var(--space-3);
     min-width: 100%;       /* zostaje, ale mamy też poziomy scroll w razie W */
-    table-layout: fixed;   /* stabilne szerokości i ellipsy działają przewidywalnie */
+    table-layout: auto;    /* zmienione z fixed na auto dla lepszego dopasowania */
   }
 
   th, td{
     border: none;
-    padding: clamp(14px, 2vw, 30px);
+    padding: clamp(12px, 2.5vw, 20px);
     font-weight: normal;
-    font-size: clamp(14px, 1.8vw, 20px);
+    font-size: clamp(16px, 2.2vw, 18px); /* większe minimalne rozmiary */
     background: transparent;
     min-height: 44px;
     vertical-align: middle;
-    white-space: nowrap;      /* domyślnie pojedyncza linia… */
+    white-space: normal;      /* zmienione z nowrap na normal dla zawijania tekstu */
     overflow: visible;
+    word-wrap: break-word;    /* pozwól na łamanie długich słów */
+    hyphens: auto;           /* automatyczne dzielenie słów */
   }
 
   tr{
@@ -107,12 +109,30 @@
 
   /* Responsive adjustments - maintain word integrity */
   @media (max-width: 768px){
-    table{ border-spacing: 0 var(--space-3); }
+    table{ border-spacing: 0 var(--space-2); }
+    th, td{ 
+      padding: clamp(10px, 3vw, 16px);
+      font-size: clamp(15px, 2.8vw, 17px); /* zapewnia czytelność na średnich ekranach */
+    }
   }
 
   @media (max-width: 480px){
     table{ border-spacing: 0 var(--space-2); }
-    th, td{ padding: clamp(6px, 3vw, 16px); }
+    th, td{ 
+      padding: clamp(8px, 3.5vw, 14px);
+      font-size: clamp(14px, 3.2vw, 16px); /* większy minimalny rozmiar na małych ekranach */
+    }
+    .wrap{
+      padding: var(--space-3);
+    }
+  }
+
+  /* Bardzo małe ekrany - priorytet czytelności */
+  @media (max-width: 320px){
+    th, td{ 
+      font-size: 14px; /* stały, czytelny rozmiar */
+      padding: 8px;
+    }
   }
 
   /* Oszczędzanie ruchu – wyłącz rotację „magnesu" jeśli użytkownik woli mniej animacji */
@@ -123,16 +143,17 @@
   .magnet-text{
     display: inline-block;
     margin: 1px;
-    padding: 4px 6px;
+    padding: 3px 5px;
     background: var(--letter-bg);
     color: var(--fg);
     border-radius: var(--radius);
     font-weight: bold;
-    min-width: 16px;
+    min-width: 14px;
     text-align: center;
     transition: all 0.2s ease;
     will-change: transform;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: inherit; /* dziedziczy rozmiar od rodzica */
   }
 
   .magnet-text:hover {
@@ -143,13 +164,24 @@
   /* Space character styling */
   .magnet-space {
     display: inline-block;
-    width: 12px;
+    width: 8px; /* zmniejszone dla lepszego dopasowania */
   }
 
   /* Airport terminal styling for rows */
   tr:hover .magnet-word {
     background: var(--letter-hover-bg);
     transform: translateY(-1px);
+  }
+
+  /* Dodatkowe style dla lepszej czytelności */
+  .magnet-text {
+    line-height: 1.2;
+  }
+
+  /* Zwiększ kontrast dla lepszej czytelności */
+  :root {
+    --letter-bg: #333333;
+    --letter-hover-bg: #4a4a4a;
   }
 </style>
 </head>
@@ -171,7 +203,7 @@
     return String(text ?? '').split('').map(char=>{
       if(char === ' ') return '<span class="magnet-space"></span>';
       // mniejszy zakres dla lepszej czytelności
-      const rotation = (Math.random() - 0.5) * 3; // -1.5° do +1.5°
+      const rotation = (Math.random() - 0.5) * 2; // -1° do +1° (zmniejszone)
       return `<span class="magnet-text" style="transform: rotate(${rotation}deg);">${char}</span>`;
     }).join('');
   }
@@ -206,7 +238,7 @@
     const loadingEl = document.getElementById('loading');
     const errorEl = document.getElementById('error');
     try{
-      const res = await fetch(csvUrl, { cache: 'no-store' });
+      const res = await fetch(csvUrl, cache: 'no-store' });
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const csvText = await res.text();
       const rows = parseCSV(csvText);
