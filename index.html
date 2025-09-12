@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tabela (mobile fix + balanced spacing)</title>
+<title>Tabela (no letter tiles + plain col3)</title>
 <style>
   :root{
     --maxw: 1200px;
@@ -46,7 +46,7 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
 
-  /* Pasek informacyjny */
+  /* Info bar */
   #loading, #error {
     font-weight: 500;
     font-size: clamp(12px, 2.5vw, 18px);
@@ -75,14 +75,17 @@
     background: transparent;
     min-height: 44px;
     vertical-align: middle;
-    white-space: nowrap; /* desktop keeps single line */
+    white-space: nowrap; /* default: single line */
     overflow: visible;
   }
 
-  /* ===== Balanced horizontal spacing between columns ===== */
-  /* Equalized edge paddings to keep date↔text, text↔next columns visually even */
+  /* Balanced horizontal spacing between columns */
   td:first-child { padding-right: var(--space-2); }
   td + td { padding-left: var(--space-2); }
+
+  /* Column-specific tweaks */
+  /* Col 1 (date) stays compact; Col 2 (city) uses pills; Col 3 (plain text) wraps naturally */
+  td:nth-child(3){ white-space: normal; }
 
   tr{
     transition: background-color .15s ease;
@@ -109,51 +112,22 @@
     td + td { padding-left: var(--space-1); }
   }
 
-  /* ====== Letter tiles (≥600px) ====== */
-  .magnet-text{
-    display: inline-block;
-    margin: 1px;
-    padding: 4px 6px;
+  /* ====== Word pills (used for non-plain cells) ====== */
+  .magnet-word{
+    display: inline-flex;
+    align-items: center;
+    margin: 2px 6px 2px 0;
+    padding: 6px 10px;
     background: var(--letter-bg);
-    color: var(--fg);
-    border-radius: 4px;
-    font-weight: bold;
-    min-width: 16px;
-    text-align: center;
-    transition: transform 0.2s ease, background 0.2s ease;
-    will-change: transform;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    transform-origin: center;
-  }
-  .magnet-text:hover { background: var(--letter-hover-bg); transform: translateY(-1px); }
-  .magnet-space { display: inline-block; width: 10px; }
-
-  /* ====== Word blocks (≤600px) ====== */
-  @media (max-width: 600px){
-    /* Word pill */
-    .magnet-word{
-      display: inline-flex;     /* stable baseline */
-      align-items: center;
-      margin: 2px 6px 2px 0;
-      padding: 6px 10px;
-      background: var(--letter-bg);
-      border-radius: 999px;
-      font-weight: 700;
-      line-height: 1.1;
-      white-space: nowrap;      /* keep each word on a single line */
-      box-shadow: 0 1px 2px rgba(0,0,0,.25);
-      will-change: transform;
-      transform: none !important;  /* remove jitter on mobile for coherence */
-    }
-
-    /* Hide per-letter tiles in narrow view to prevent vertical stack */
-    .magnet-text, .magnet-space { display: none !important; }
+    border-radius: 999px;
+    font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;      /* keep each word on a single line */
+    box-shadow: 0 1px 2px rgba(0,0,0,.25);
   }
 
-  /* Reduced motion */
-  @media (prefers-reduced-motion: reduce){
-    .magnet-text, .magnet-word { transform: none !important; transition: none !important; }
-  }
+  /* No per-letter tiles at all */
+  /* .magnet-text removed intentionally */
 
   /* ====== Compact vertical date badge ====== */
   .date-compact{
@@ -169,7 +143,7 @@
     min-width: 36px;
     box-shadow: 0 1px 2px rgba(0,0,0,.25);
     vertical-align: middle;
-    margin-right: 8px; /* tighter gap to city */
+    margin-right: 8px; /* tight gap to city */
   }
   .date-compact .day{ font-size: clamp(16px, 2.6vw, 20px); font-weight: 800; letter-spacing: 0.3px; }
   .date-compact .month{ font-size: clamp(10px, 1.6vw, 12px); font-weight: 700; opacity: 0.9; letter-spacing: 0.4px; margin-top: 2px; }
@@ -191,27 +165,21 @@
 
 <script>
   /* ===== Helpers ===== */
-  function randomRotation(maxDeg){ const range = maxDeg * 2; return (Math.random() * range) - maxDeg; }
   function isNarrow(){ return (typeof window !== 'undefined') && window.innerWidth <= 600; }
 
-  // Render per-letter tiles (desktop / wide)
-  function renderLetters(text){
-    return String(text ?? '').split('').map(char=>{
-      if(char === ' ') return '<span class="magnet-space"></span>';
-      const rotation = randomRotation(1.2);
-      return `<span class=\"magnet-text\" style=\"transform: rotate(${rotation}deg);\">${escapeHTML(char)}</span>`;
-    }).join('');
-  }
-
-  // Render word pills (mobile / narrow)
+  // Render word pills (used for most text cells)
   function renderWords(text){
     const words = String(text ?? '').trim().split(/\s+/);
     return words.map(w=> `<span class=\"magnet-word\">${escapeHTML(w)}</span>`).join(' ');
   }
 
-  function applyBlockyText(text){ return isNarrow() ? renderWords(text) : renderLetters(text); }
+  // Plain text (no pills); for column 3
+  function renderPlain(text){
+    const span = document.createElement('span');
+    span.textContent = String(text ?? '');
+    return span.outerHTML;
+  }
 
-  // Escape for HTML injection safety
   function escapeHTML(s){
     return String(s)
       .replace(/&/g,'&amp;')
@@ -329,8 +297,17 @@
 
           // 1) Try date compact renderer
           const dateHTML = renderDateCompact(cell);
-          if(dateHTML){ td.innerHTML = dateHTML; }
-          else { td.innerHTML = applyBlockyText(cell); }
+          if(dateHTML){
+            td.innerHTML = dateHTML;
+          } else {
+            // Column 3: render plain text (no word bubbles)
+            if(j === 2){
+              td.innerHTML = renderPlain(cell);
+            } else {
+              // Other columns: word pills
+              td.innerHTML = renderWords(cell);
+            }
+          }
 
           tr.appendChild(td);
         }
@@ -354,7 +331,7 @@
   window.addEventListener('load', ()=>{
     loadData();
 
-    // Re-render when crossing the 600px threshold (letters ↔ words)
+    // Re-render when crossing the 600px threshold (not strictly needed now, but kept for consistency)
     window.addEventListener('resize', debounce(()=>{
       const nowNarrow = isNarrow();
       if(cachedRows && lastRenderNarrow !== null && nowNarrow !== lastRenderNarrow){
